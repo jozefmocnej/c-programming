@@ -1,0 +1,31 @@
+#This is an example of generic makefile I've created just for your information. You don't have to use it (not even fully understand it) but at least you see how it could be done.
+
+CC = gcc
+CFLAGS = -std=c11 -Wall -Werror
+LDLIBS = -lm
+SOURCES = $(wildcard *.c)
+OBJECTS = $(SOURCES:.c=.o)
+DEPS = $(SOURCES:.c=.d)
+EXECUTABLE = game
+
+all: $(SOURCES) $(EXECUTABLE)
+
+$(EXECUTABLE): $(OBJECTS)
+	cppcheck --enable=performance,unusedFunction --error-exitcode=1 *.c
+	$(CC) $(CFLAGS) $(OBJECTS) $(LDLIBS) -o $@
+	
+#-MMD
+#Generate dependency information as a side-effect of compilation, not instead of compilation. This version omits system headers from the generated dependencies: if you prefer to preserve system headers as prerequisites, use -MD.
+#-MP
+#Adds a target for each prerequisite in the list, to avoid errors when deleting files.
+%.o: %.c
+	$(CC) $(CFLAGS) $(LDLIBS) -MMD -MP -c $< -o $@
+
+#A phony target is one that is not really the name of a file; rather it is just a name for a recipe to be executed when you make an explicit request. There are two reasons to use a phony target: to avoid a conflict with a file of the same name, and to improve performance.
+.PHONY: clean
+
+# $(RM) is rm -f by default
+clean:
+	$(RM) $(OBJECTS) $(DEPS) $(EXECUTABLE)
+
+-include $(DEPS)
